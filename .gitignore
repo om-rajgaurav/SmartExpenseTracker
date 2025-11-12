@@ -22,6 +22,9 @@ DerivedData
 *.xcuserstate
 **/.xcode.env.local
 
+TROUBLESHOOTING.md
+.kiro
+
 # Android/IntelliJ
 #
 build/

@@ -1,97 +1,172 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Smart Expense Tracker
 
-# Getting Started
+A React Native app that automatically tracks your expenses by reading bank SMS messages. Built for Android with offline-first architecture.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## What it does
 
-## Step 1: Start Metro
+Instead of manually entering every expense, this app reads your bank transaction SMS and automatically creates expense entries. It categorizes transactions, shows spending insights, and keeps everything stored locally on your device.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Features
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Automatic SMS tracking** - Reads bank transaction messages and creates expenses automatically
+- **Smart categorization** - Automatically sorts expenses into categories (Food, Transport, Shopping, etc.)
+- **Visual insights** - Charts and graphs showing where your money goes
+- **Offline-first** - Everything works without internet, data stays on your device
+- **Manual entry** - Can still add expenses manually if needed
+- **Transaction history** - View, filter, and search all your expenses
 
-```sh
-# Using npm
+## Tech Stack
+
+- React Native 0.82
+- TypeScript
+- Redux Toolkit (state management)
+- SQLite (local database)
+- React Native Paper (UI components)
+- Victory Native (charts)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- Android Studio (for Android development)
+- React Native development environment set up
+
+If you haven't set up React Native yet, follow the [official setup guide](https://reactnative.dev/docs/set-up-your-environment).
+
+### Installation
+
+```bash
+# Clone the repo
+git clone <your-repo-url>
+cd SmartExpenseTracker
+
+# Install dependencies
+npm install
+
+# Apply patches (fixes for deprecated dependencies)
+npm run postinstall
+```
+
+### Running the App
+
+```bash
+# Start Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+# In another terminal, run Android
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+The app should launch on your Android emulator or connected device.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### First Launch
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+On first launch, you'll see:
+1. Onboarding screens explaining the app
+2. SMS permission request (needed for auto-tracking)
+3. Dashboard with your expenses
 
-```sh
-bundle install
+If you skip the SMS permission, you can enable it later from the Settings tab.
+
+## Project Structure
+
+```
+src/
+├── components/       # Reusable UI components
+├── db/              # SQLite database setup and queries
+├── hooks/           # Custom React hooks
+├── navigation/      # Navigation configuration
+├── screens/         # App screens
+├── services/        # Business logic (SMS parsing, auto-tracking)
+├── store/           # Redux store and slices
+├── theme/           # Theme and styling
+├── types/           # TypeScript type definitions
+└── utils/           # Helper functions
 ```
 
-Then, and every time you update your native dependencies, run:
+## Key Files
 
-```sh
-bundle exec pod install
+- `src/services/smsParser.ts` - Parses bank SMS messages
+- `src/services/smsAutoTracker.ts` - Handles automatic transaction creation
+- `src/db/database.ts` - SQLite database operations
+- `src/store/transactionSlice.ts` - Transaction state management
+
+## Development
+
+### Running Tests
+
+```bash
+npm test
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### Type Checking
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+```bash
+npx tsc --noEmit
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Linting
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```bash
+npm run lint
+```
 
-## Step 3: Modify your app
+## Known Issues & Fixes
 
-Now that you have successfully run the app, let's make changes!
+### jcenter() Deprecated Error
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+If you see build errors about `jcenter()`, the patches should fix this automatically. The app uses `patch-package` to replace deprecated `jcenter()` with `mavenCentral()` in:
+- `react-native-get-sms-android`
+- `react-native-sqlite-storage`
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+Patches are in the `patches/` folder and applied automatically after `npm install`.
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### SMS Permission
 
-## Congratulations! :tada:
+SMS reading only works on Android. The app will show a message on iOS devices explaining this limitation.
 
-You've successfully run and modified your React Native App. :partying_face:
+## Troubleshooting
 
-### Now what?
+### App crashes on launch
+- Clear app data: `adb shell pm clear com.smartexpensetracker`
+- Rebuild: `npm run android`
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+### SMS not being tracked
+- Check if SMS permission is granted in Settings tab
+- Verify you're on Android (iOS doesn't support SMS reading)
+- Check logs for parsing errors: `npx react-native log-android`
 
-# Troubleshooting
+### Build fails
+- Clean build: `cd android && ./gradlew clean && cd ..`
+- Clear Metro cache: `npm start -- --reset-cache`
+- Reinstall dependencies: `rm -rf node_modules && npm install`
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## Testing SMS Parsing
 
-# Learn More
+To test without real bank SMS, you can modify the SMS parser to accept test messages. Check `src/services/smsParser.ts` for the parsing logic.
 
-To learn more about React Native, take a look at the following resources:
+Currently supports common Indian bank SMS formats (HDFC, ICICI, SBI, Axis, etc.).
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## Privacy & Security
+
+- All data stored locally in SQLite
+- No cloud sync or external servers
+- SMS messages are only read, never sent or shared
+- App doesn't have internet permission (offline-only)
+
+## Contributing
+
+Feel free to open issues or submit PRs. Main areas for improvement:
+- Support for more bank SMS formats
+- Better categorization logic
+- Export/backup features
+- Budget tracking
+
+## License
+
+MIT
+
+## Notes
+
+This is a personal expense tracking app focused on privacy and offline functionality. It's not meant to replace full-featured finance apps but provides a simple, automatic way to track daily expenses from bank SMS.
