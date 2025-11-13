@@ -201,11 +201,7 @@ export function startSMSAutoTracking(
   return cleanup;
 }
 
-/**
- * Initialize SMS auto-tracking
- * - Process existing SMS on first permission grant
- * - Start listener for new SMS
- */
+
 export async function initializeSMSAutoTracking(
   onTransactionCreated?: (transaction: Transaction) => void,
 ): Promise<(() => void) | null> {
