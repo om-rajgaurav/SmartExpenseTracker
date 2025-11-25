@@ -5,7 +5,16 @@ A React Native app that automatically tracks your expenses by reading bank SMS m
 ## What it does
 
 Instead of manually entering every expense, this app reads your bank transaction SMS and automatically creates expense entries. It categorizes transactions, shows spending insights, and keeps everything stored locally on your device.
+## Demo and Screenshots
+<img width="340" height="762" alt="Screenshot 2025-11-26 at 1 53 15 AM" src="https://github.com/user-attachments/assets/06650ed3-618e-426d-8d04-5cd771c4624b" />
+<img width="344" height="763" alt="Screenshot 2025-11-26 at 1 51 43 AM" src="https://github.com/user-attachments/assets/cbef05e6-90a3-4872-9d72-c2bf733368f1" />
+<img width="346" height="778" alt="Screenshot 2025-11-26 at 1 51 56 AM" src="https://github.com/user-attachments/assets/d5189562-1624-41ff-9483-7f3e13677d73" />
+<img width="340" height="757" alt="Screenshot 2025-11-26 at 1 52 10 AM" src="https://github.com/user-attachments/assets/03ce2b28-f87e-43c5-99ba-6d9ad899b544" />
 
+https://github.com/user-attachments/assets/f9fc6db2-1fab-4d0e-b4da-058555254211
+
+https://github.com/user-attachments/assets/de7e86ff-4f87-4cc6-b97a-e292c16639d7
+  
 ## Features
 
 - **Automatic SMS tracking** - Reads bank transaction messages and creates expenses automatically
