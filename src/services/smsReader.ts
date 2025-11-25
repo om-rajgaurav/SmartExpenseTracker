@@ -187,6 +187,9 @@ export async function readAllSMS(): Promise<SMSData[]> {
   }
 }
 
+// Track processed SMS to prevent duplicates
+const processedSMSIds = new Set<string>();
+
 /**
  * Start listening for new incoming SMS messages
  */
@@ -205,10 +208,22 @@ export function startSMSListener(
 
   try {
     const subscription = SmsListener.addListener((message: SMSMessage) => {
+      // Create unique ID combining timestamp and sender
+      const smsId = `${message.timestamp}-${message.originatingAddress}`;
+      
+      // Check if we've already processed this SMS
+      if (processedSMSIds.has(smsId)) {
+        console.log('Duplicate SMS detected, skipping:', smsId);
+        return;
+      }
+      
+      // Mark as processed
+      processedSMSIds.add(smsId);
+      
       console.log('SMS received from:', message.originatingAddress);
       
       const smsData: SMSData = {
-        id: `${message.timestamp}`, // Use timestamp as ID
+        id: smsId,
         sender: message.originatingAddress,
         body: message.body,
         date: new Date(message.timestamp),
@@ -216,6 +231,11 @@ export function startSMSListener(
       };
 
       callback(smsData);
+      
+      // Clean up old entries after 1 minute to prevent memory leak
+      setTimeout(() => {
+        processedSMSIds.delete(smsId);
+      }, 60000);
     });
 
     console.log('SMS listener started successfully');
@@ -224,6 +244,7 @@ export function startSMSListener(
     return () => {
       try {
         subscription.remove();
+        processedSMSIds.clear();
         console.log('SMS listener stopped');
       } catch (error) {
         console.error('Error stopping SMS listener:', error);

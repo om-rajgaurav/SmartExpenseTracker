@@ -23,8 +23,15 @@ function AppContent() {
   const [initError, setInitError] = useState<string | null>(null);
   const smsCleanupRef = useRef<(() => void) | null>(null);
   const appState = useRef(AppState.currentState);
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent double initialization in React strict mode
+    if (isInitializedRef.current) {
+      return;
+    }
+    isInitializedRef.current = true;
+
     const setupApp = async () => {
       try {
         // Initialize database
@@ -61,8 +68,11 @@ function AppContent() {
     // Cleanup SMS listener on unmount
     return () => {
       if (smsCleanupRef.current) {
+        console.log('Cleaning up SMS listener on unmount');
         smsCleanupRef.current();
+        smsCleanupRef.current = null;
       }
+      isInitializedRef.current = false;
     };
   }, []);
 
@@ -74,14 +84,8 @@ function AppContent() {
         nextAppState === 'active'
       ) {
         console.log('App has come to the foreground');
-        // Reinitialize SMS tracking if needed
-        if (!smsCleanupRef.current) {
-          const cleanup = await initializeSMSAutoTracking((transaction) => {
-            console.log('New transaction created from SMS:', transaction.id);
-            store.dispatch(loadTransactions());
-          });
-          smsCleanupRef.current = cleanup;
-        }
+        // Reload transactions to show any new ones
+        store.dispatch(loadTransactions());
       }
 
       appState.current = nextAppState;

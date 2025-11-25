@@ -170,3 +170,24 @@ MIT
 ## Notes
 
 This is a personal expense tracking app focused on privacy and offline functionality. It's not meant to replace full-featured finance apps but provides a simple, automatic way to track daily expenses from bank SMS.
+
+
+## Testing with Emulator SMS
+
+You can simulate bank SMS messages on the Android emulator using these ADB commands:
+
+# HDFC Bank SMS
+adb emu sms send HDFCBK "Your A/c XX1234 debited with Rs.450.00 on 26-11-2024 at Starbucks Coffee. Avl Bal: Rs.15,250.00"
+
+# Axis Bank SMS
+adb emu sms send AXISBK "Rs.350.00 debited from A/c XX9012 on 26-11-2024 at Uber India. Avl Bal: Rs.8,750.00"
+
+# ICICI Bank SMS
+adb emu sms send ICICIB "Your A/c XX5678 debited for Rs.1,250.50 on 26-11-2024 for purchase at Amazon India. Available balance: Rs.25,500.00"
+
+# SBI Bank SMS
+adb emu sms send SBIIN "Your SBI A/c XX3456 debited with Rs.2,500.00 on 26-11-2024 for payment at Reliance Digital. Available Bal: Rs.45,200.00"
+
+
+testing video Android Emulator
+

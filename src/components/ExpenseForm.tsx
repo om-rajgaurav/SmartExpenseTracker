@@ -62,15 +62,22 @@ const validationSchema = Yup.object().shape({
         return !decimalPart || decimalPart.length <= 2;
       },
     ),
+
+  // ✅ FIXED DATE VALIDATION
   date: Yup.date()
     .nullable()
     .required('Date is required')
     .test('not-future', 'Date cannot be in the future', function (value) {
       if (!value) return true;
+
       const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      return value <= today;
+      const picked = new Date(value);
+
+      return (
+        picked.setHours(0, 0, 0, 0) <= today.setHours(0, 0, 0, 0)
+      );
     }),
+
   notes: Yup.string().max(200, 'Notes cannot exceed 200 characters'),
 });
 
@@ -105,69 +112,51 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         handleBlur,
         setFieldValue,
         handleSubmit,
+        setFieldTouched,
       }) => (
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled">
           {/* ✅ Category Picker Modal */}
-          <View style={styles.fieldContainer}>
+         <View style={styles.fieldContainer}>
             <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => !loading && setShowCategoryModal(true)}>
+              activeOpacity={1}
+              onPress={() => {
+                if (!loading) {
+                  setShowDatePicker(true);
+                  setFieldTouched('date', true);
+                }
+              }}>
               <TextInput
-                label="Category *"
-                value={values.category}
+                label="Date *"
+                value={formatDate(values.date)}
                 editable={false}
-                error={touched.category && !!errors.category}
-                right={<TextInput.Icon icon="chevron-down" />}
+                error={touched.date && !!errors.date}
+                right={<TextInput.Icon icon="calendar" />}
                 mode="outlined"
                 style={styles.input}
               />
             </TouchableOpacity>
-            <HelperText
-              type="error"
-              visible={touched.category && !!errors.category}>
-              {errors.category}
+
+            <HelperText type="error" visible={touched.date && !!errors.date}>
+              {typeof errors.date === 'string' ? errors.date : 'Invalid date'}
             </HelperText>
 
-            {/* Modal for Category Selection */}
-            <Modal
-              animationType="slide"
-              transparent
-              visible={showCategoryModal}
-              onRequestClose={() => setShowCategoryModal(false)}>
-              <View style={styles.modalBackdrop}>
-                <View style={styles.modalContainer}>
-                  <Text variant="titleMedium" style={styles.modalTitle}>
-                    Select Category
-                  </Text>
-
-                  <FlatList
-                    data={categories}
-                    keyExtractor={(item) => item}
-                    ItemSeparatorComponent={() => <Divider />}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setFieldValue('category', item);
-                          setShowCategoryModal(false);
-                        }}
-                        style={styles.modalItem}>
-                        <Text style={styles.modalItemText}>{item}</Text>
-                      </TouchableOpacity>
-                    )}
-                  />
-
-                  <Button
-                    onPress={() => setShowCategoryModal(false)}
-                    style={styles.modalCloseBtn}
-                    mode="outlined">
-                    Cancel
-                  </Button>
-                </View>
-              </View>
-            </Modal>
+            {showDatePicker && (
+              <DateTimePicker
+                value={values.date || new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                maximumDate={new Date()}
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setFieldValue('date', selectedDate);
+                  }
+                }}
+              />
+            )}
           </View>
 
           {/* Amount Input */}
