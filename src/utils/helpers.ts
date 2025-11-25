@@ -5,22 +5,31 @@ export const formatCurrency = (
   amount: number,
   currency: string = 'INR'
 ): string => {
-  const formattedAmount = amount.toLocaleString('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  try {
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '₹0.00';
+    }
+    
+    const formattedAmount = amount.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
-  switch (currency) {
-    case 'INR':
-      return `₹${formattedAmount}`;
-    case 'USD':
-      return `$${formattedAmount}`;
-    case 'EUR':
-      return `€${formattedAmount}`;
-    case 'GBP':
-      return `£${formattedAmount}`;
-    default:
-      return `${currency} ${formattedAmount}`;
+    switch (currency) {
+      case 'INR':
+        return `₹${formattedAmount}`;
+      case 'USD':
+        return `$${formattedAmount}`;
+      case 'EUR':
+        return `€${formattedAmount}`;
+      case 'GBP':
+        return `£${formattedAmount}`;
+      default:
+        return `${currency} ${formattedAmount}`;
+    }
+  } catch (error) {
+    console.error('Error formatting currency:', error, amount);
+    return '₹0.00';
   }
 };
 
@@ -29,26 +38,70 @@ export const formatDate = (
   date: Date | string,
   formatString: string = 'dd MMM yyyy'
 ): string => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, formatString);
+  try {
+    if (!date) {
+      return 'Invalid Date';
+    }
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    if (isNaN(dateObj.getTime())) {
+      return 'Invalid Date';
+    }
+    return format(dateObj, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error, date);
+    return 'Invalid Date';
+  }
 };
 
 
 export const formatDateTime = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'dd MMM yyyy, hh:mm a');
+  try {
+    if (!date) {
+      return 'Invalid Date';
+    }
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    if (isNaN(dateObj.getTime())) {
+      return 'Invalid Date';
+    }
+    return format(dateObj, 'dd MMM yyyy, hh:mm a');
+  } catch (error) {
+    console.error('Error formatting date time:', error, date);
+    return 'Invalid Date';
+  }
 };
 
 
 export const formatMonthYear = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'MMM yyyy');
+  try {
+    if (!date) {
+      return 'Invalid Date';
+    }
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    if (isNaN(dateObj.getTime())) {
+      return 'Invalid Date';
+    }
+    return format(dateObj, 'MMM yyyy');
+  } catch (error) {
+    console.error('Error formatting month year:', error, date);
+    return 'Invalid Date';
+  }
 };
 
 
 export const getMonthString = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'yyyy-MM');
+  try {
+    if (!date) {
+      return '';
+    }
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    if (isNaN(dateObj.getTime())) {
+      return '';
+    }
+    return format(dateObj, 'yyyy-MM');
+  } catch (error) {
+    console.error('Error getting month string:', error, date);
+    return '';
+  }
 };
 
 

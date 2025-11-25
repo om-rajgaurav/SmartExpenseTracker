@@ -99,11 +99,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
+      validateOnMount={false} // ✅ FIX: No initial validation
       validateOnChange={false}
       validateOnBlur={true}
-      onSubmit={(values, { resetForm }) => {
-        onSubmit(values, resetForm);
-      }}>
+      onSubmit={(values, { resetForm }) => onSubmit(values, resetForm)}
+    >
       {({
         values,
         errors,
@@ -111,55 +111,79 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         handleChange,
         handleBlur,
         setFieldValue,
-        handleSubmit,
         setFieldTouched,
+        handleSubmit,
       }) => (
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled">
-          {/* ✅ Category Picker Modal */}
-         <View style={styles.fieldContainer}>
+          keyboardShouldPersistTaps="handled"
+        >
+
+          {/* CATEGORY */}
+          <View style={styles.fieldContainer}>
             <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {
-                if (!loading) {
-                  setShowDatePicker(true);
-                  setFieldTouched('date', true);
-                }
-              }}>
+              activeOpacity={0.9}
+              onPress={() => !loading && setShowCategoryModal(true)}
+            >
               <TextInput
-                label="Date *"
-                value={formatDate(values.date)}
+                label="Category *"
+                value={values.category}
                 editable={false}
-                error={touched.date && !!errors.date}
-                right={<TextInput.Icon icon="calendar" />}
                 mode="outlined"
+                right={<TextInput.Icon icon="chevron-down" />}
+                error={touched.category && !!errors.category}
                 style={styles.input}
               />
             </TouchableOpacity>
 
-            <HelperText type="error" visible={touched.date && !!errors.date}>
-              {typeof errors.date === 'string' ? errors.date : 'Invalid date'}
+            <HelperText type="error" visible={touched.category && !!errors.category}>
+              {errors.category}
             </HelperText>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={values.date || new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                maximumDate={new Date()}
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setFieldValue('date', selectedDate);
-                  }
-                }}
-              />
-            )}
+            {/* CATEGORY MODAL */}
+            <Modal
+              transparent
+              animationType="slide"
+              visible={showCategoryModal}
+              onRequestClose={() => setShowCategoryModal(false)}
+            >
+              <View style={styles.modalBackdrop}>
+                <View style={styles.modalContainer}>
+                  <Text variant="titleMedium" style={styles.modalTitle}>
+                    Select Category
+                  </Text>
+
+                  <FlatList
+                    data={categories}
+                    keyExtractor={(item) => item}
+                    ItemSeparatorComponent={() => <Divider />}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.modalItem}
+                        onPress={() => {
+                          setFieldValue('category', item);
+                          setShowCategoryModal(false);
+                        }}
+                      >
+                        <Text style={styles.modalItemText}>{item}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowCategoryModal(false)}
+                    style={styles.modalCloseBtn}
+                  >
+                    Cancel
+                  </Button>
+                </View>
+              </View>
+            </Modal>
           </View>
 
-          {/* Amount Input */}
+          {/* AMOUNT */}
           <View style={styles.fieldContainer}>
             <TextInput
               label="Amount *"
@@ -168,8 +192,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               onBlur={handleBlur('amount')}
               keyboardType="decimal-pad"
               editable={!loading}
-              error={touched.amount && !!errors.amount}
               left={<TextInput.Affix text="₹" />}
+              error={touched.amount && !!errors.amount}
               mode="outlined"
               style={styles.input}
             />
@@ -178,29 +202,35 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </HelperText>
           </View>
 
-          {/* ✅ Date Picker */}
+          {/* DATE */}
           <View style={styles.fieldContainer}>
             <TouchableOpacity
               activeOpacity={1}
-              onPress={() => !loading && setShowDatePicker(true)}>
+              onPress={() => {
+                if (!loading) {
+                  setShowDatePicker(true);
+                  setFieldTouched('date', true); // mark as touched only on click
+                }
+              }}
+            >
               <TextInput
                 label="Date *"
                 value={formatDate(values.date)}
                 editable={false}
-                error={touched.date && !!errors.date}
-                right={<TextInput.Icon icon="calendar" />}
                 mode="outlined"
+                right={<TextInput.Icon icon="calendar" />}
+                error={touched.date && !!errors.date}
                 style={styles.input}
               />
             </TouchableOpacity>
 
             <HelperText type="error" visible={touched.date && !!errors.date}>
-              {typeof errors.date === 'string' ? errors.date : 'Invalid date'}
+              {errors.date}
             </HelperText>
 
             {showDatePicker && (
               <DateTimePicker
-                value={values.date || new Date()}
+                value={values.date}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 maximumDate={new Date()}
@@ -214,37 +244,34 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             )}
           </View>
 
-          {/* Notes Input */}
+          {/* NOTES */}
           <View style={styles.fieldContainer}>
             <TextInput
               label="Notes (Optional)"
               value={values.notes}
               onChangeText={handleChange('notes')}
               onBlur={handleBlur('notes')}
+              mode="outlined"
               multiline
               numberOfLines={4}
               editable={!loading}
               error={touched.notes && !!errors.notes}
-              mode="outlined"
               style={[styles.input, styles.notesInput]}
             />
-            <HelperText type="info" visible={!errors.notes}>
-              {values.notes.length}/200 characters
-            </HelperText>
-            <HelperText
-              type="error"
-              visible={touched.notes && !!errors.notes}>
+            <HelperText type="info">{values.notes.length}/200 characters</HelperText>
+            <HelperText type="error" visible={touched.notes && !!errors.notes}>
               {errors.notes}
             </HelperText>
           </View>
 
-          {/* Submit Button */}
+          {/* SUBMIT */}
           <Button
             mode="contained"
             onPress={() => handleSubmit()}
             loading={loading}
             disabled={loading}
-            style={styles.submitButton}>
+            style={styles.submitButton}
+          >
             Add Expense
           </Button>
 

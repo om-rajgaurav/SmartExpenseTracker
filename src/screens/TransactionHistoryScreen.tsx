@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -43,9 +43,7 @@ export const TransactionHistoryScreen: React.FC = () => {
   const [transactionToDelete, setTransactionToDelete] = useState<
     string | null
   >(null);
-  const [swipeableRefs, setSwipeableRefs] = useState<
-    Map<string, Swipeable | null>
-  >(new Map());
+  const swipeableRefs = useRef<Map<string, Swipeable | null>>(new Map());
   const [refreshing, setRefreshing] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -122,7 +120,7 @@ export const TransactionHistoryScreen: React.FC = () => {
   const handleEditPress = useCallback(
     (transaction: Transaction) => {
       // Close the swipeable row
-      const swipeable = swipeableRefs.get(transaction.id);
+      const swipeable = swipeableRefs.current.get(transaction.id);
       if (swipeable) {
         swipeable.close();
       }
@@ -133,7 +131,7 @@ export const TransactionHistoryScreen: React.FC = () => {
         'Edit functionality will be implemented in a future update.',
       );
     },
-    [swipeableRefs],
+    [],
   );
 
   const renderRightActions = useCallback(
@@ -164,7 +162,9 @@ export const TransactionHistoryScreen: React.FC = () => {
         <Swipeable
           ref={ref => {
             if (ref) {
-              setSwipeableRefs(prev => new Map(prev).set(item.id, ref));
+              swipeableRefs.current.set(item.id, ref);
+            } else {
+              swipeableRefs.current.delete(item.id);
             }
           }}
           renderRightActions={() => renderRightActions(item)}

@@ -38,6 +38,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   const [balance, setBalance] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [categoryTotals, setCategoryTotals] = useState<Record<Category, number>>(
     {} as Record<Category, number>,
   );
@@ -63,6 +64,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       // Load category totals
       const totals = await db.getCategoryTotals();
       setCategoryTotals(totals);
+
+      // Load monthly budget
+      const budget = await db.getMonthlyBudget();
+      setMonthlyBudget(budget);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       setSnackbarMessage('Failed to load dashboard data. Please try again.');
@@ -73,6 +78,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Reload data when transactions change (e.g., new SMS arrives)
+  useEffect(() => {
+    loadDashboardData();
+  }, [transactions.length]);
 
   // Reload data when screen comes into focus (e.g., after adding expense)
   useFocusEffect(
@@ -163,7 +173,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           renderEmptyState()
         ) : (
           <>
-            <BalanceCard balance={balance} monthlyExpenses={monthlyExpenses} />
+            <BalanceCard balance={balance} monthlyExpenses={monthlyExpenses} monthlyBudget={monthlyBudget} />
 
             <CategoryChart categoryTotals={categoryTotals} />
 

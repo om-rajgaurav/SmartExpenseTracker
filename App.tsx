@@ -15,13 +15,12 @@ import {store} from './src/store';
 import {initDatabase} from './src/db/database';
 import {AppNavigator} from './src/navigation/AppNavigator';
 import {theme} from './src/theme/theme';
-import {initializeSMSAutoTracking} from './src/services/smsAutoTracker';
+import {startGlobalSMSTracking, stopGlobalSMSTracking} from './src/services/smsTrackingManager';
 import {loadTransactions} from './src/store/transactionSlice';
 
 function AppContent() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
-  const smsCleanupRef = useRef<(() => void) | null>(null);
   const appState = useRef(AppState.currentState);
   const isInitializedRef = useRef(false);
 
@@ -39,22 +38,21 @@ function AppContent() {
         setIsDbReady(true);
         setInitError(null);
 
-        // Initialize SMS auto-tracking
-        console.log('Initializing SMS auto-tracking...');
-        const cleanup = await initializeSMSAutoTracking((transaction) => {
-          console.log('✅ New transaction created from SMS:', transaction.id);
-          console.log('Transaction details:', transaction);
-          // Reload transactions to update UI
-          store.dispatch(loadTransactions());
-        });
-
-        if (cleanup) {
-          console.log('✅ SMS auto-tracking initialized successfully');
-        } else {
-          console.log('⚠️ SMS auto-tracking not initialized (permission may not be granted)');
-        }
+        // Note: SMS auto-tracking is initialized in PermissionsScreen after user grants permission
+        // We only initialize it here if permission was already granted
+        const {hasSMSPermission} = require('./src/services/smsReader');
+        const hasPermission = await hasSMSPermission();
         
-        smsCleanupRef.current = cleanup;
+        if (hasPermission) {
+          console.log('SMS permission already granted, initializing auto-tracking...');
+          await startGlobalSMSTracking((transaction) => {
+            console.log('✅ New transaction created from SMS:', transaction.id);
+            // Reload transactions to update UI
+            store.dispatch(loadTransactions());
+          });
+        } else {
+          console.log('SMS permission not granted yet, skipping auto-tracking initialization');
+        }
       } catch (error) {
         console.error('Failed to initialize app:', error);
         setInitError('Failed to initialize database. Some features may not work properly.');
@@ -67,11 +65,7 @@ function AppContent() {
 
     // Cleanup SMS listener on unmount
     return () => {
-      if (smsCleanupRef.current) {
-        console.log('Cleaning up SMS listener on unmount');
-        smsCleanupRef.current();
-        smsCleanupRef.current = null;
-      }
+      stopGlobalSMSTracking();
       isInitializedRef.current = false;
     };
   }, []);

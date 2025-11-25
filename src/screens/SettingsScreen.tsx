@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
-import {View, StyleSheet, Alert, Platform} from 'react-native';
-import {Button, Text, Card, Divider, Switch} from 'react-native-paper';
+import React, {useState, useEffect} from 'react';
+import {View, StyleSheet, Alert, Platform, ScrollView} from 'react-native';
+import {Button, Text, Card, Divider, Switch, Portal, Dialog, TextInput} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import {theme} from '../theme/theme';
@@ -17,6 +17,46 @@ export const SettingsScreen = () => {
   const {hasSMSPermission, requestPermission, openSettings} = useSMSPermission();
   const [isResetting, setIsResetting] = useState(false);
   const [isEnablingSMS, setIsEnablingSMS] = useState(false);
+  const [monthlyBudget, setMonthlyBudget] = useState(0);
+  const [budgetDialogVisible, setBudgetDialogVisible] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
+
+  // Load budget on mount
+  useEffect(() => {
+    loadBudget();
+  }, []);
+
+  const loadBudget = async () => {
+    try {
+      const budget = await db.getMonthlyBudget();
+      setMonthlyBudget(budget);
+    } catch (error) {
+      console.error('Error loading budget:', error);
+    }
+  };
+
+  const handleSetBudget = () => {
+    setBudgetInput(monthlyBudget > 0 ? monthlyBudget.toString() : '');
+    setBudgetDialogVisible(true);
+  };
+
+  const handleSaveBudget = async () => {
+    const amount = parseFloat(budgetInput);
+    if (isNaN(amount) || amount < 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid budget amount');
+      return;
+    }
+
+    try {
+      await db.setMonthlyBudget(amount);
+      setMonthlyBudget(amount);
+      setBudgetDialogVisible(false);
+      Alert.alert('Success', 'Monthly budget updated successfully!');
+    } catch (error) {
+      console.error('Error saving budget:', error);
+      Alert.alert('Error', 'Failed to save budget');
+    }
+  };
 
   const handleResetOnboarding = async () => {
     Alert.alert(
@@ -136,7 +176,7 @@ export const SettingsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Card style={styles.card}>
         <Card.Title title="SMS Auto-Tracking" />
         <Card.Content>
@@ -190,11 +230,36 @@ export const SettingsScreen = () => {
       </Card>
 
       <Card style={styles.card}>
-        <Card.Title title="App Settings" />
+        <Card.Title title="Budget Settings" />
         <Card.Content>
-          <Text variant="bodyMedium" style={styles.description}>
-            Manage your app preferences and data
-          </Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text variant="bodyLarge" style={styles.settingTitle}>
+                Monthly Budget
+              </Text>
+              <Text variant="bodySmall" style={styles.settingDescription}>
+                {monthlyBudget > 0
+                  ? `Current budget: ₹${monthlyBudget.toLocaleString('en-IN')}`
+                  : 'No budget set'}
+              </Text>
+            </View>
+            <View style={styles.settingControl}>
+              <Button
+                mode="contained"
+                onPress={handleSetBudget}
+                compact>
+                {monthlyBudget > 0 ? 'Edit' : 'Set Budget'}
+              </Button>
+            </View>
+          </View>
+          
+          {monthlyBudget > 0 && (
+            <View style={styles.infoBox}>
+              <Text variant="bodySmall" style={styles.infoText}>
+                💡 Your monthly budget will be shown on the dashboard to help you track spending.
+              </Text>
+            </View>
+          )}
         </Card.Content>
       </Card>
 
@@ -237,7 +302,31 @@ export const SettingsScreen = () => {
           </Text>
         </Card.Content>
       </Card>
-    </View>
+
+      <Portal>
+        <Dialog visible={budgetDialogVisible} onDismiss={() => setBudgetDialogVisible(false)}>
+          <Dialog.Title>Set Monthly Budget</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={{marginBottom: 16}}>
+              Enter your monthly expense budget to track your spending
+            </Text>
+            <TextInput
+              label="Budget Amount"
+              value={budgetInput}
+              onChangeText={setBudgetInput}
+              keyboardType="numeric"
+              mode="outlined"
+              left={<TextInput.Affix text="₹" />}
+              placeholder="0"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setBudgetDialogVisible(false)}>Cancel</Button>
+            <Button onPress={handleSaveBudget}>Save</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </ScrollView>
   );
 };
 

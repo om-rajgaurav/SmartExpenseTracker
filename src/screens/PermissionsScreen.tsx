@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSMSPermission } from '../hooks/useSMSPermission';
 import { theme } from '../theme/theme';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { initializeSMSAutoTracking } from '../services/smsAutoTracker';
+import { startGlobalSMSTracking } from '../services/smsTrackingManager';
 import { useDispatch } from 'react-redux';
 import { loadTransactions } from '../store/transactionSlice';
 import { AppDispatch } from '../store';
@@ -27,7 +27,7 @@ export const PermissionsScreen = () => {
       // Initialize SMS auto-tracking after permission is granted
       setIsProcessing(true);
       try {
-        await initializeSMSAutoTracking((transaction) => {
+        await startGlobalSMSTracking((transaction) => {
           console.log('New transaction created from SMS:', transaction.id);
           dispatch(loadTransactions());
         });

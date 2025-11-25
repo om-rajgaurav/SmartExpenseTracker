@@ -67,6 +67,14 @@ export async function initDatabase(): Promise<void> {
       'CREATE INDEX IF NOT EXISTS idx_sms_parsed ON sms_messages(parsed);',
     );
 
+    // Create settings table for budget and other app settings
+    await db.executeSql(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    `);
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -395,6 +403,49 @@ export async function markSMSAsParsed(
     );
   } catch (error) {
     console.error('Error marking SMS as parsed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get monthly budget
+ */
+export async function getMonthlyBudget(): Promise<number> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  try {
+    const [results] = await db.executeSql(
+      'SELECT value FROM settings WHERE key = ?',
+      ['monthly_budget'],
+    );
+
+    if (results.rows.length > 0) {
+      return parseFloat(results.rows.item(0).value);
+    }
+    return 0; // Default budget is 0 (not set)
+  } catch (error) {
+    console.error('Error getting monthly budget:', error);
+    return 0;
+  }
+}
+
+/**
+ * Set monthly budget
+ */
+export async function setMonthlyBudget(amount: number): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  try {
+    await db.executeSql(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['monthly_budget', amount.toString()],
+    );
+  } catch (error) {
+    console.error('Error setting monthly budget:', error);
     throw error;
   }
 }
